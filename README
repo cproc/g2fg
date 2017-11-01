@@ -1,0 +1,10 @@
+GRUB2 for Genode
+
+This repository contains the script to build GRUB2 for Genode and
+the final GRUB2 binaries for UEFI 32/64bit and BIOS boot.
+
+Please look into or execute create_grub2_bootloader to download and build
+the GRUB2 binaries yourself.
+
+The GRUB2 binaries in the tar archive has been build on a Ubuntu 16.04 LTS
+installation.

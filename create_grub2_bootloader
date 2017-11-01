@@ -1,0 +1,135 @@
+#!/bin/bash
+set -e
+
+if [ ! -d $GENODE_DIR/repos ]; then
+	echo "Directory seems not to contain Genode sources - exit"
+	echo "\$GENODE_DIR: '$GENODE_DIR'"
+	exit
+fi
+
+GRUB2_PORT_DIR=$($GENODE_DIR/tool/ports/current grub2)
+FILES_MOD=$(basename -a $(ls $GRUB2_PORT_DIR/boot/grub2/*.mod))
+
+GRUB2_DIR=/tmp/tmp.genode_grub2
+
+GRUB2_KEEP_TMP=1
+
+if [ ! -d $GRUB2_DIR ]; then
+	GRUB2_DIR=$(mktemp -d)
+fi
+
+GRUB2_DIR_BIOS_SRC=$GRUB2_DIR/32_pc.git
+GRUB2_DIR_BIOS=$GRUB2_DIR_BIOS_SRC/binary
+
+GRUB2_DIR_UEFI_32_SRC=$GRUB2_DIR/32_efi.git
+GRUB2_DIR_UEFI_32_INSTALL=$GRUB2_DIR_UEFI_32_SRC/binary
+
+GRUB2_DIR_UEFI_64_SRC=$GRUB2_DIR/64_efi.git
+GRUB2_DIR_UEFI_64_INSTALL=$GRUB2_DIR_UEFI_64_SRC/binary
+
+if [ ! -d $GRUB2_DIR/grub.git ]; then
+	#git clone git://git.savannah.gnu.org/grub.git $GRUB2_DIR/grub.git
+	# genode_uefi version:
+	#  commit 972765fe8245cdf44d465329f33b5aa9ac6c2f47 (12.1.2017)
+	# genode_bios version:
+	#  commit 92bfc33db984eec22966a163eed7b6f2ab0266bf (22.9.2017)
+
+	git clone https://github.com/alex-ab/grub.git $GRUB2_DIR/grub.git
+	cd $GRUB2_DIR/grub.git && git checkout origin/genode_uefi -b genode_uefi
+	cd $GRUB2_DIR/grub.git && git checkout origin/genode_bios -b genode_bios
+	cd $GRUB2_DIR/grub.git && git checkout master
+fi
+
+if [ ! -d $GRUB2_DIR_UEFI_32_SRC ]; then
+	git clone -b genode_uefi $GRUB2_DIR/grub.git $GRUB2_DIR_UEFI_32_SRC
+fi
+
+if [ ! -d $GRUB2_DIR_UEFI_64_SRC ]; then
+	git clone -b genode_uefi $GRUB2_DIR/grub.git $GRUB2_DIR_UEFI_64_SRC
+fi
+
+if [ ! -d $GRUB2_DIR_BIOS_SRC ]; then
+	git clone -b genode_bios $GRUB2_DIR/grub.git $GRUB2_DIR_BIOS_SRC
+fi
+
+
+#
+# UEFI 64 bit version
+#
+if [ ! -f $GRUB2_DIR_UEFI_64_SRC/configure ]; then
+	cd $GRUB2_DIR_UEFI_64_SRC && ./autogen.sh
+fi
+if [ ! -f $GRUB2_DIR_UEFI_64_SRC/config.h ]; then
+	cd $GRUB2_DIR_UEFI_64_SRC && ./configure --quiet --prefix=$GRUB2_DIR_UEFI_64_INSTALL --with-platform=efi --target=x86_64
+fi
+make --quiet -C $GRUB2_DIR_UEFI_64_SRC install
+
+$GRUB2_DIR_UEFI_64_INSTALL/bin/grub-mkimage -O x86_64-efi -d $GRUB2_DIR_UEFI_64_INSTALL/lib/grub/x86_64-efi -o $GRUB2_DIR/grub2_64.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio -p "/boot/grub"
+
+
+#
+# UEFI 32 bit version
+#
+if [ ! -f $GRUB2_DIR_UEFI_32_SRC/configure ]; then
+	cd $GRUB2_DIR_UEFI_32_SRC && ./autogen.sh
+fi
+if [ ! -f $GRUB2_DIR_UEFI_32_SRC/config.h ]; then
+	cd $GRUB2_DIR_UEFI_32_SRC && ./configure --quiet --prefix=$GRUB2_DIR_UEFI_32_INSTALL --with-platform=efi --target=i386
+fi
+make --quiet -C $GRUB2_DIR_UEFI_32_SRC install
+
+$GRUB2_DIR_UEFI_32_INSTALL/bin/grub-mkimage -O i386-efi -d $GRUB2_DIR_UEFI_32_INSTALL/lib/grub/i386-efi -o $GRUB2_DIR/grub2_32.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio -p "/boot/grub"
+
+
+#
+# BIOS version
+#
+if [ ! -f $GRUB2_DIR_BIOS_SRC/configure ]; then
+	cd $GRUB2_DIR_BIOS_SRC && ./autogen.sh
+fi
+if [ ! -f $GRUB2_DIR_BIOS_SRC/config.h ]; then
+	cd $GRUB2_DIR_BIOS_SRC && ./configure --quiet --prefix=$GRUB2_DIR_BIOS --with-platform=pc
+fi
+make --quiet -C $GRUB2_DIR_BIOS_SRC install
+
+$GRUB2_DIR_BIOS/bin/grub-mkimage -O i386-pc -d $GRUB2_DIR_BIOS/lib/grub/i386-pc -o $GRUB2_DIR/bios.img iso9660 biosdisk -p "/boot/grub"
+cat $GRUB2_DIR_BIOS/lib/grub/i386-pc/cdboot.img $GRUB2_DIR/bios.img > $GRUB2_DIR/eltorito.img
+cat $GRUB2_DIR_BIOS/lib/grub/i386-pc/boot.img $GRUB2_DIR/bios.img > $GRUB2_DIR/embedded.img
+
+
+#
+# Copy bootloader binaries to genode tool directory
+#
+if [ ! -d $GRUB2_DIR/grub2 ]; then
+	mkdir $GRUB2_DIR/grub2
+fi
+
+for file in $FILES_MOD
+do
+	cp $GRUB2_DIR_BIOS/lib/grub/i386-pc/$file $GRUB2_DIR/grub2/$file
+done
+cp $GRUB2_DIR/eltorito.img $GRUB2_DIR/grub2/.
+cp $GRUB2_DIR/embedded.img $GRUB2_DIR/grub2/.
+
+# UEFI
+cp $GRUB2_DIR/grub2_32.efi $GRUB2_DIR/grub2/.
+cp $GRUB2_DIR/grub2_64.efi $GRUB2_DIR/grub2/.
+
+# tar
+tar cjfC $GRUB2_DIR/grub2-tmp.tar.bz2 $GRUB2_DIR grub2
+SHA1SUM=$(sha1sum $GRUB2_DIR/grub2-tmp.tar.bz2 | cut -f1 -d" ")
+
+mv $GRUB2_DIR/grub2-tmp.tar.bz2 $GRUB2_DIR/grub2-$SHA1SUM.tar.bz2
+
+#
+# Cleanup if requested
+#
+if [ $GRUB2_KEEP_TMP -eq 1 ]; then
+	echo ""
+	echo "keep temporary directory $GRUB2_DIR"
+	echo " grub2-$SHA1SUM.tar.bz2"
+	echo "contains all the GRUB2 binaries"
+else
+	rm -rf $GRUB2_DIR
+fi
+
