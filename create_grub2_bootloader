@@ -7,6 +7,8 @@ if [ ! -d $GENODE_DIR/repos ]; then
 	exit
 fi
 
+cd $GENODE_DIR
+
 GRUB2_PORT_DIR=$($GENODE_DIR/tool/ports/current grub2)
 FILES_MOD=$(basename -a $(ls $GRUB2_PORT_DIR/boot/grub2/*.mod))
 
@@ -30,13 +32,16 @@ GRUB2_DIR_UEFI_64_INSTALL=$GRUB2_DIR_UEFI_64_SRC/binary
 if [ ! -d $GRUB2_DIR/grub.git ]; then
 	#git clone git://git.savannah.gnu.org/grub.git $GRUB2_DIR/grub.git
 	# genode_uefi version:
-	#  commit 972765fe8245cdf44d465329f33b5aa9ac6c2f47 (12.1.2017)
+	#   commit fc5802a3e64f674c7f5732a147dd5d066bcee950
+	#  based on grub master
+	#   commit 446794de8da4329ea532cbee4ca877bcafd0e534 (checkout 1.11.2017)
 	# genode_bios version:
-	#  commit 92bfc33db984eec22966a163eed7b6f2ab0266bf (22.9.2017)
+	#  based on grub master
+	#   commit 446794de8da4329ea532cbee4ca877bcafd0e534 (checkout 1.11.2017)
 
 	git clone https://github.com/alex-ab/grub.git $GRUB2_DIR/grub.git
-	cd $GRUB2_DIR/grub.git && git checkout origin/genode_uefi -b genode_uefi
-	cd $GRUB2_DIR/grub.git && git checkout origin/genode_bios -b genode_bios
+	cd $GRUB2_DIR/grub.git && git checkout fc5802a3e64f674c7f5732a147dd5d066bcee950 -b genode_uefi
+	cd $GRUB2_DIR/grub.git && git checkout 446794de8da4329ea532cbee4ca877bcafd0e534 -b genode_bios
 	cd $GRUB2_DIR/grub.git && git checkout master
 fi
 
