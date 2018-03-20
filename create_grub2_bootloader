@@ -32,16 +32,17 @@ GRUB2_DIR_UEFI_64_INSTALL=$GRUB2_DIR_UEFI_64_SRC/binary
 if [ ! -d $GRUB2_DIR/grub.git ]; then
 	#git clone git://git.savannah.gnu.org/grub.git $GRUB2_DIR/grub.git
 	# genode_uefi version:
-	#   commit fc5802a3e64f674c7f5732a147dd5d066bcee950
+	#   commit 6ec3146d890c2a82e243e235a779a47909ab9491
 	#  based on grub master
 	#   commit 446794de8da4329ea532cbee4ca877bcafd0e534 (checkout 1.11.2017)
 	# genode_bios version:
+	#   comit a364f03f472fb6c456194ea09ae3a370c9c6a08d
 	#  based on grub master
 	#   commit 446794de8da4329ea532cbee4ca877bcafd0e534 (checkout 1.11.2017)
 
 	git clone https://github.com/alex-ab/grub.git $GRUB2_DIR/grub.git
-	cd $GRUB2_DIR/grub.git && git checkout fc5802a3e64f674c7f5732a147dd5d066bcee950 -b genode_uefi
-	cd $GRUB2_DIR/grub.git && git checkout 446794de8da4329ea532cbee4ca877bcafd0e534 -b genode_bios
+	cd $GRUB2_DIR/grub.git && git checkout 6ec3146d890c2a82e243e235a779a47909ab9491 -b genode_uefi
+	cd $GRUB2_DIR/grub.git && git checkout a364f03f472fb6c456194ea09ae3a370c9c6a08d -b genode_bios
 	cd $GRUB2_DIR/grub.git && git checkout master
 fi
 
