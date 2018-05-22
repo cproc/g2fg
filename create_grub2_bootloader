@@ -70,7 +70,7 @@ if [ ! -f $GRUB2_DIR_UEFI_64_SRC/config.h ]; then
 fi
 make --quiet -C $GRUB2_DIR_UEFI_64_SRC install
 
-$GRUB2_DIR_UEFI_64_INSTALL/bin/grub-mkimage -O x86_64-efi -d $GRUB2_DIR_UEFI_64_INSTALL/lib/grub/x86_64-efi -o $GRUB2_DIR/grub2_64.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio configfile ext2 -p "/boot/grub"
+$GRUB2_DIR_UEFI_64_INSTALL/bin/grub-mkimage -O x86_64-efi -d $GRUB2_DIR_UEFI_64_INSTALL/lib/grub/x86_64-efi -o $GRUB2_DIR/grub2_64.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio configfile ext2 gfxterm_background png -p "/boot/grub"
 
 
 #
@@ -84,7 +84,7 @@ if [ ! -f $GRUB2_DIR_UEFI_32_SRC/config.h ]; then
 fi
 make --quiet -C $GRUB2_DIR_UEFI_32_SRC install
 
-$GRUB2_DIR_UEFI_32_INSTALL/bin/grub-mkimage -O i386-efi -d $GRUB2_DIR_UEFI_32_INSTALL/lib/grub/i386-efi -o $GRUB2_DIR/grub2_32.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio configfile ext2 -p "/boot/grub"
+$GRUB2_DIR_UEFI_32_INSTALL/bin/grub-mkimage -O i386-efi -d $GRUB2_DIR_UEFI_32_INSTALL/lib/grub/i386-efi -o $GRUB2_DIR/grub2_32.efi part_gpt multiboot multiboot2 fat normal efi_uga efi_gop gzio configfile ext2 gfxterm_background png -p "/boot/grub"
 
 
 #

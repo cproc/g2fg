@@ -34,7 +34,7 @@ if [ ! -d $GRUB2_DIR ]; then
 	exit 1
 fi
 
-head_size_kib=1600
+head_size_kib=1768
  head_img="grub2-head.img"
 
 # generate image file
@@ -48,9 +48,9 @@ fallocate -l ${head_size_kib}kiB $head_img
 parted="parted -a none -s $head_img -- "
 
 let "bios_boot_fs = 40  *     512 / 512" # fs == firstsector
-let "bios_boot_ls = $bios_boot_fs + 63"  # ls == lastsector
+let "bios_boot_ls = $bios_boot_fs + 83"  # ls == lastsector
 let "grub2_fs     = $bios_boot_ls + 1"
-let "grub2_ls     = 1556 * 1024 / 512 - $bios_boot_fs - 1"
+let "grub2_ls     = 1724 * 1024 / 512 - $bios_boot_fs - 1"
 let "genode_fs    = $grub2_ls + 1"
 let "genode_ls    = $head_size_kib * 1024 / 512 - $bios_boot_fs - 1"
 
@@ -84,8 +84,8 @@ sudo mount /dev/loop3 $mnt_genode
 
 sudo $GRUB2_INSTALL --root-directory=$mnt_grub2 --no-floppy \
                     --target i386-pc \
-                    --install-modules="configfile multiboot multiboot2 gzio ext2" \
-                    --modules="biosdisk part_gpt" /dev/loop0
+                    --install-modules="configfile multiboot multiboot2 gzio ext2 gfxterm_background png" \
+                    --modules="biosdisk part_gpt vbe" /dev/loop0
 
 # generate GRUB2 configuration
 cfg=$(mktemp)
@@ -93,10 +93,17 @@ cfg=$(mktemp)
 cat > $cfg <<EOF
 set root=(hd0,3)
 
-insmod normal
+set gfxpayload=keep
 
-terminal_input console
-terminal_output console
+#set menu_color_normal=black/black
+#set color_normal=black/black
+
+insmod gfxterm
+terminal_output gfxterm
+insmod gfxterm_background
+insmod png
+#loadfont /boot/grub/fonts/unicode.pf2
+background_image -m normal /boot/boot.png
 
 configfile /boot/grub/grub.cfg
 EOF
@@ -107,10 +114,6 @@ sudo cp grub2/grub2_32.efi $mnt_grub2/efi/boot/bootia32.efi
 sudo cp grub2/grub2_64.efi $mnt_grub2/efi/boot/bootx64.efi
 
 cat > $cfg <<EOF
-insmod normal
-
-terminal_input console
-terminal_output console
 
 menuentry 'Genode on ???' {
  multiboot2 /boot/bender
@@ -119,6 +122,12 @@ EOF
 
 sudo mkdir -p $mnt_genode/boot/grub
 sudo cp $cfg $mnt_genode/boot/grub/grub.cfg
+
+#sudo cp /home/alex/genode/sculpt_release/test.png $mnt_genode/boot/genode.png
+#sudo cp $GENODE_DIR/repos/gems/src/app/backdrop/genode_logo.png $mnt_genode/boot/boot.png
+#sudo mkdir -p $mnt_genode/boot/grub/fonts/
+# by installing libfreetype6-dev? or unifont? it will be generated
+#sudo cp /boot/grub/fonts/unicode.pf2 $mnt_genode/boot/grub/fonts/.
 
 # cleanup
 rm $cfg
