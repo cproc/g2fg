@@ -86,6 +86,13 @@ sudo $GRUB2_INSTALL --root-directory=$mnt_grub2 --no-floppy \
                     --target i386-pc \
                     --install-modules="configfile multiboot multiboot2 gzio ext2 gfxterm_background png" \
                     --modules="biosdisk part_gpt vbe" /dev/loop0
+sudo rm $mnt_grub2/boot/grub/grubenv
+sudo rm $mnt_grub2/boot/grub/i386-pc/*.img
+sudo rm $mnt_grub2/boot/grub/i386-pc/*.sh
+sudo rm $mnt_grub2/boot/grub/i386-pc/*.o
+sudo rm $mnt_grub2/boot/grub/i386-pc/*.cfg
+sudo rmdir $mnt_grub2/boot/grub/fonts
+sudo rmdir $mnt_grub2/boot/grub/locale
 
 # generate GRUB2 configuration
 cfg=$(mktemp)
@@ -103,7 +110,7 @@ terminal_output gfxterm
 insmod gfxterm_background
 insmod png
 #loadfont /boot/grub/fonts/unicode.pf2
-background_image -m normal /boot/boot.png
+background_image -m center /boot/boot.png
 
 configfile /boot/grub/grub.cfg
 EOF
@@ -123,7 +130,6 @@ EOF
 sudo mkdir -p $mnt_genode/boot/grub
 sudo cp $cfg $mnt_genode/boot/grub/grub.cfg
 
-#sudo cp /home/alex/genode/sculpt_release/test.png $mnt_genode/boot/genode.png
 #sudo cp $GENODE_DIR/repos/gems/src/app/backdrop/genode_logo.png $mnt_genode/boot/boot.png
 #sudo mkdir -p $mnt_genode/boot/grub/fonts/
 # by installing libfreetype6-dev? or unifont? it will be generated
