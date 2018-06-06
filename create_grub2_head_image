@@ -100,7 +100,7 @@ cfg=$(mktemp)
 cat > $cfg <<EOF
 set root=(hd0,3)
 
-set gfxpayload=keep
+set gfxpayload="0x0x32"
 
 #set menu_color_normal=black/black
 #set color_normal=black/black
